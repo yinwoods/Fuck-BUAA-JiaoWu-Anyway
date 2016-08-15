@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- encoding: UTF-8 -*-
+import re
 import config
 import string
 import requests
@@ -7,7 +8,6 @@ import subprocess
 from PIL import Image
 from bs4 import BeautifulSoup
 from io import StringIO
-from urllib.request import urlretrieve
 
 class Crawler():
 
@@ -41,7 +41,7 @@ class Crawler():
         pass
 
     # 获取验证码
-    def getVerifyCode(self):
+    def get_verify_code(self):
         res = self.session.get(url=self.imageUrl, headers=self.headers)
         with open('verify.jpg', 'wb') as f:
             f.write(res.content)
@@ -58,46 +58,58 @@ class Crawler():
             return f.read()
 
     # 过滤验证码
-    def filterVerifyCode(self, verifyCode):
+    def filter_verify_code(self, verifyCode):
         # 找出被错误识别为字母的数字
+
+        if len(verifyCode) < 4:
+            return verifyCode
+
         alpha_digit_map = {
-                'B', '8',
-                'D', '0',
-                'g', '9',
-                'i', '1',
-                'I', '1',
-                'j', '1',
-                'J', '1',
-                'o', '0',
-                'O', '0',
-                'q', '9',
-                'Q', '0',
-                's', '5',
-                'S', '5',
-                'z', '2',
-                'Z', '2',
+                'B': '8',
+                'D': '0',
+                'E': '6',
+                'g': '9',
+                'i': '1',
+                'I': '1',
+                'j': '1',
+                'J': '1',
+                'm': '11',
+                'M': '11',
+                'o': '0',
+                'O': '0',
+                'q': '9',
+                'Q': '0',
+                's': '5',
+                'S': '5',
+                'z': '2',
+                'Z': '2',
                 }
-        for key, val in alpha_digit_map.items():
-            verifyCode.replace(key, val)
+
+        # 将错误识别的字母替换为相似的数字
+        verifyCode.translate(alpha_digit_map)
 
         # 使用正则表达式匹配4位数字
-        regx = re.find('(\d{4})')
+        regx = re.compile('(\d{4})')
         code = regx.match(verifyCode)
         return code.group()
 
+    # 直到登录成功为止
     def login(self):
 
         while True:
             # 获取验证码
-            verifyCode = self.getVerifyCode()
-            verifyCode = verifyCode.strip(string.punctuation).strip()
-            print('verifycode = ', verifyCode)
-            print('len(verifycode) = ', len(verifyCode))
+            verifyCode = self.get_verify_code()
+
+            verifyCode = verifyCode.strip()
+            punctuation = string.punctuation + '‘’'
+            for cha in punctuation:
+                verifyCode = verifyCode.replace(cha, '')
+            verifyCode = verifyCode.strip()
 
             # 验证码始终是四位数，因此过滤掉不符合条件的结果
             # 使用正则表达式来提取4位数字
-            if len(self.filterVerifyCode(verifyCode)) == 4:
-                print(verifyCode)
+            if len(self.filter_verify_code(verifyCode)) == 4:
+                print('验证码 =', verifyCode)
                 break
 
 
@@ -110,8 +122,10 @@ class Crawler():
         self.session.cookies.update(self.cookies)
 
         response = self.session.post(url=self.loginUrl, data=data, headers=self.headers)
-        print(response.cookies)
-        print(response.text)
+        if response.text.find('您的位置') != -1:
+            print('登录成功')
+        else:
+            self.login()
 
 
 def main():
