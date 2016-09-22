@@ -1,5 +1,7 @@
 import unittest
-from crawler import Crawler
+
+from get_courses_schedule.main import Crawler
+
 
 class Test(unittest.TestCase):
 
@@ -18,4 +20,7 @@ class Test(unittest.TestCase):
         pass
 
 if __name__ == '__main__':
-    unittest.main()
+    # unittest.main()
+
+    x = 'abc<br><br><br><br>'
+    print(x.strip('<br>'))
