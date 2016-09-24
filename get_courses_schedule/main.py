@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- encoding: UTF-8 -*-
+import os
 import re
 import string
 import subprocess
@@ -243,33 +244,39 @@ class Crawler():
         query = 'SELECT course_name, course_time, course_place from all_courses_info where course_name = %s'
         self.cursor.execute(query, (course_name, ))
         self.conn.commit()
-        for item in self.cursor.fetchall():
-            print(item)
-            # print(item[0], item[1] + '\n' + item[2])
-            # day = item[1].split(' ')[0]
+
+        return self.cursor.fetchall()
 
     # 获取课程表
     def get_courses_schedule(self):
-
         # 获取所有课程信息并保存到数据库， 仅处理一次
         query = 'SELECT COUNT(*) FROM all_courses_info'
         self.cursor.execute(query)
         self.conn.commit()
-        cnt = self.cursor.fetchone()
+        cnt = self.cursor.fetchone()[0]
         if cnt == 0:
             self.save_all_courses_info_to_mysql()
+
+        res_courses_info = []
 
         # 依次查询已选课表的信息
         res = self.get_selected_courses()
         for item in res:
             courseinfo = OrderedDict(item)
-            self.search_course((courseinfo['course_name']))
+            res = self.search_course((courseinfo['course_name']))
 
+            # 过滤掉对应排课为空的课程信息，例如英语硕免
+            for item in res:
+                if not len(item) == 0:
+                    res_courses_info.append(item)
+        return res_courses_info
+
+#TODO: 把verify.jpg 以及 verify.txt保存到tmp目录中
 
 def main():
     crawler =Crawler()
     crawler.login()
-    crawler.get_courses_schedule()
+    print(crawler.get_courses_schedule())
 
 if __name__ == "__main__":
     main()

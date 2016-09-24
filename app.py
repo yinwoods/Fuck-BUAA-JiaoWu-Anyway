@@ -1,5 +1,7 @@
-from flask import Flask
 from get_courses_schedule.main import Crawler
+from generate_schedule_table import Generate_schedule_table
+
+from flask import Flask
 from flask import request, render_template
 from flask_wtf import Form
 from wtforms import StringField, BooleanField
@@ -33,8 +35,13 @@ def login():
             f.write('password = \'' + password + '\'\n')
         crawler = Crawler()
         crawler.login()
-        crawler.get_courses_schedule()
-    return '<html><body><h1>hello world</h1></body></html>'
+        courses_info = crawler.get_courses_schedule()
+
+        cls = Generate_schedule_table(courses_info)
+        schedule_info = cls.generate()
+        return render_template('schedule.html', schedule_info=schedule_info)
+    else:
+        return '<html><body><h1>hello world</h1></body></html>'
 
 class LoginForm(Form):
     username = StringField(label='输入用户名：', validators=[DataRequired()])

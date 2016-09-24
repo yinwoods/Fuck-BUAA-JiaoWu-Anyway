@@ -30,7 +30,7 @@ class Courses:
                 cnt2 += 1
                 if cnt2 % 2 == 0:
                     res = res[0:index] + '节  ' + res[index + 1:]
-        return res
+        return res.strip()
 
     # 返回一条信息中的上课地点
     @property

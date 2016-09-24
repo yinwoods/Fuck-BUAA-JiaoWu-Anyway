@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>Flat University Timetable</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/schedule.css') }}">
+  </head>
+
+  <body>
+  <!-- / College Timetable -->
+
+<h1 class="yinwoodsH1"> 基于辣鸡北航教务定制的课程表： </h1>
+
+<div class='tab'>
+  <center>
+
+  <table border='0' cellpadding='0' cellspacing='0'>
+    <tr class='days'>
+        <th></th>
+        <th>第1节</th>
+        <th>第2节</th>
+        <th>第3节</th>
+        <th>第4节</th>
+        <th>第5节</th>
+        <th>第6节</th>
+        <th>第7节</th>
+        <th>第8节</th>
+        <th>第9节</th>
+        <th>第10节</th>
+        <th>第11节</th>
+        <th>第12节</th>
+    </tr>
+        {% set index = 1 %}
+        {% for weekday in schedule_info %}
+            <tr>
+                <td class='time'>{{ weekday['weekday'] }}</td>
+
+                {% for course in weekday['courses'] %}
+
+                    {% set cls = ['cs335 blue', 'cs426 purple', 'md352 green', 'cs240 orange', 'md303 navy', 'md313 red'] %}
+                    {% set index = (index + 1) % 6 %}
+
+                    {% if course['name'] == '' %}
+                        <td colspan="{{ (course['ed_pd'] | int) - (course['st_pd'] | int) + 1 }}"></td>
+                    {% else %}
+
+                        <td class="{{ cls[index] }}" colspan="{{ (course['ed_pd'] | int) - (course['st_pd'] | int) + 1 }}">
+                            {{ course['name'] }}
+                            <br/>
+                            {{ course['place'] }} - {{ course['st_ed_weekds'] }}
+                        </td>
+                    {% endif %}
+
+                {% endfor %}
+            </tr>
+        {% endfor %}
+
+  </table>
+  </center>
+</div>
+  </body>
+</html>
