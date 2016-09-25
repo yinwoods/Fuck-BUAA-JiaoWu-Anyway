@@ -9,7 +9,7 @@ class Courses:
     @property
     def course_name(self):
         regx = re.compile('《(.*?)》')
-        return regx.match(self.info).group(1)
+        return regx.search(self.info).group(1)
 
     # 返回一条信息中的上课时间
     @property
@@ -47,7 +47,7 @@ class Courses:
         return ''
 
 def main():
-    cls = Courses('《公司金融》6周-10周5节-8节 A1048 (8系) ')
+    cls = Courses('[《应用密码学》5周-16周7节-8节 主M404 ')
     print(cls)
 
 if __name__ == '__main__':

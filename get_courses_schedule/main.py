@@ -66,9 +66,13 @@ class Crawler():
         p = subprocess.Popen(['tesseract', 'verify.jpg', 'verify'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
 
-        # 返回验证码
-        with open('verify.txt', 'r') as f:
-            verifyCode = f.read()
+        try:
+
+            # 返回验证码
+            with open('verify.txt', 'r') as f:
+                verifyCode = f.read()
+        except UnicodeDecodeError:
+            return self.get_verify_code()
 
         # 对验证码进行简单的去错处理
         verifyCode = verifyCode.strip()
@@ -168,26 +172,10 @@ class Crawler():
 
         # 获取个人的课表信息
 
-        CourseInfo = namedtuple("CourseInfo", "course_id course_name course_attr course_category course_period course_cred")
+        CourseInfo = namedtuple("CourseInfo", "course_id course_name course_category course_period course_cred")
 
         html = BeautifulSoup(response.text, 'html.parser')
         trlist = html.find_all(class_="tablefont2")
-
-        # attr:
-        # 01 - 公共必修课
-        # 0201 - 基础理论课
-        # 0202 - 一级学科理论课
-        # 0203 - 二级学科理论课
-
-        # 因为这里无法了解所有课程类型的代码
-        # 所以创建 defaultdict，当key不存在时，抛出KeyError
-        attr_dict = defaultdict(KeyError)
-        attr_dict.update({
-            '01': '公共必修课',
-            '0201': '基础理论课',
-            '0202': '一级学科理论课',
-            '0203': '二级学科理论课',
-        })
 
         # 保存所有的课程信息并作为函数结果返回
         res = []
@@ -195,18 +183,13 @@ class Crawler():
         # 这里的 filter 用来滤掉非选课表中的行
         for tr in filter(lambda x: len(x.find_all('td')) == 13, trlist):
             tdlist = tr.find_all('td')
-
             #TODO KeyError 还未处理
             # 这里的 map 是为了对每个列调用get_text().strip()
             # 利用 namedtuple 的 _make() 函数来保存相应内容
             courseinfo = CourseInfo._make(
                 map(lambda x: x.get_text().strip(),
-                    (tdlist[1], tdlist[2], tdlist[3], tdlist[5], tdlist[8], tdlist[9])))
-
-            # 利用 attr_dict 替换垃圾信息
-            courseinfo = courseinfo._replace(course_attr=attr_dict[re.compile('\d+').search(courseinfo.course_attr).group()])
+                    (tdlist[1], tdlist[2], tdlist[5], tdlist[8], tdlist[9])))
             res.append(courseinfo._asdict())
-
         return res
 
     # 获取北航研究生所有课程信息，并导入数据库
@@ -226,7 +209,8 @@ class Crawler():
         # mon, tue, wed, thu, fri, sat, sun
         Week_schedule = namedtuple('Week_schedule', 'mon tue wed thu fri sat sun')
         week_schedule = Week_schedule._make(
-            map(lambda x: str(x.select('td')[1]), (printTable.select('tr')[1].select('td > table > tr')[1:])))
+            map(lambda x: str(x.select('td')[1:]), (printTable.select('tr')[1].select('td > table > tr')[1:])))
+
 
         for index, day in enumerate(week_schedule):
             day = re.sub(r'</(.*?)>', '', day)
@@ -246,8 +230,7 @@ class Crawler():
 
     # 搜索指定课程名称的课程的课程信息
     def search_course(self, course_name):
-
-        course_name = re.sub('--\d$', '', course_name)
+        course_name = re.sub('--.*?$', '', course_name)
         course_name = course_name.replace('--', '-')
         query = 'SELECT course_name, course_time, course_place from all_courses_info where course_name = %s'
         self.cursor.execute(query, (course_name, ))

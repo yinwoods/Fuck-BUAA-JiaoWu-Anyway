@@ -44,7 +44,6 @@ class Generate_schedule_table:
 
                 # 补充多节课之间的空闲课程
                 for index, cur_course in enumerate(courses[1:], start=1):
-
                     if int(cur_course['st_pd']) - int(courses[index - 1]['ed_pd']) > 1:
                         for pd in range(int(courses[index - 1]['ed_pd']) + 1, int(cur_course['st_pd'])):
                             to_insert_courses.append(null_course(item, pd))
@@ -115,7 +114,7 @@ class Generate_schedule_table:
             for week_dict in all_weekdays_dicts_list:
                 if item['weekday'] == week_dict['weekday']:
                     week_dict['courses'].append(item)
-                    week_dict['courses'].sort(key=lambda x: x['st_pd'])
+                    week_dict['courses'].sort(key=lambda x: int(x['st_pd']))
 
         all_weekdays_dicts_list = self.insert_null_course(all_weekdays_dicts_list)
 
@@ -139,12 +138,12 @@ class Generate_schedule_table:
         return str(self.schedule_info)
 
 def main():
-    param_str = [('中国特色社会主义理论与实践研究-9班', '周5 3周-11周 5节-8节', '主M101'), ('矩阵理论B-2班', '周2 2周-14周 3节-4节', '主M102'), ('矩阵理论B-2班', '周4 2周-14周 3节-4节', '主M102'), ('矩阵理论B-2班 重复', '周4 2周-14周 3节-4节', '主M102'), ('人文专题课：中国绘画艺术欣赏', '周1 9周-14周 5节-8节', '主M102'), ('算法设计与分析', '周2 1周-17周 9节-11节', '主M401'), ('新型计算机网络', '周5 1周-17周 9节-11节', '主M101'), ('程序设计语言原理', '周1 1周-17周 9节-11节', '主M101')]
+    param_str = [('中国特色社会主义理论与实践研究-9班', '周5 3周-11周 5节-8节', '主M101'), ('矩阵理论B-2班', '周2 2周-14周 3节-4节', '主M102'), ('矩阵理论B-2班', '周4 2周-14周 3节-4节', '主M102'), ('矩阵理论B-2班 重复', '周4 2周-14周 3节-4节', '主M102'), ('人文专题课：中国绘画艺术欣赏', '周1 9周-14周 5节-8节', '主M102'), ('算法设计与分析', '周2 1周-17周 10节-12节', '主M401'), ('新型计算机网络', '周5 1周-17周 9节-11节', '主M101'), ('程序设计语言原理', '周1 1周-17周 9节-11节', '主M101')]
     cls = Generate_schedule_table(param_str)
     res = cls.generate()
     for item in res:
         for course in item['courses']:
-            if not course['name'] == '':
+            if course['weekday'] == '2':
                 print(course)
 
 if __name__ == '__main__':
