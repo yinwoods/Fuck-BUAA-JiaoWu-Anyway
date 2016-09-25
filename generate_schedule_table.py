@@ -57,7 +57,6 @@ class Generate_schedule_table:
 
         for item in res:
             item['courses'].sort(key=lambda x: int(x['st_pd']))
-
         return res
 
     # 处理时间上冲突的课程
@@ -143,8 +142,7 @@ def main():
     res = cls.generate()
     for item in res:
         for course in item['courses']:
-            if course['weekday'] == '2':
-                print(course)
+            print(course)
 
 if __name__ == '__main__':
     main()

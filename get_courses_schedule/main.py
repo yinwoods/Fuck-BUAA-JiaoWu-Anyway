@@ -230,8 +230,14 @@ class Crawler():
 
     # 搜索指定课程名称的课程的课程信息
     def search_course(self, course_name):
-        course_name = re.sub('--.*?$', '', course_name)
+
+        try:
+            re.compile(r'(--\d+班)').search(course_name).groups()
+        except AttributeError:
+            course_name = re.sub('--.*?$', '', course_name)
+            
         course_name = course_name.replace('--', '-')
+
         query = 'SELECT course_name, course_time, course_place from all_courses_info where course_name = %s'
         self.cursor.execute(query, (course_name, ))
         self.conn.commit()
@@ -267,6 +273,7 @@ class Crawler():
 def main():
     username = input('username = ')
     password = input('password = ')
+
 
     crawler =Crawler(username, password)
     crawler.login()
