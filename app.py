@@ -1,3 +1,5 @@
+import pymysql
+
 from get_courses_schedule.main import Crawler
 from generate_schedule_table import Generate_schedule_table
 
@@ -13,35 +15,34 @@ app = Flask(__name__, static_url_path='')
 app.debug = True
 app.config['SECRET_KEY'] = 'yinwoods'
 
-toolbar = DebugToolbarExtension(app)
-
-
 @app.route('/')
 def index():
     loginForm = LoginForm()
     return render_template('index.html', loginForm=loginForm)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    print(request.method)
     if request.method == 'POST':
-        print('<html><body><h1>yinwoods</h1></body></html>')
 
         username = request.form.get('username')
         password = request.form.get('password')
 
-        with open('get_courses_schedule/config.py', 'w') as f:
-            f.write('username = \'' + username + '\'\n')
-            f.write('password = \'' + password + '\'\n')
-        crawler = Crawler()
-        crawler.login()
+        crawler = Crawler(username, password)
+        status_code = crawler.login()
+
+        if status_code == 'FAILED':
+            return '<h1>没有该用户或者密码错误!</h1>'
         courses_info = crawler.get_courses_schedule()
 
-        cls = Generate_schedule_table(courses_info)
-        schedule_info = cls.generate()
-        return render_template('schedule.html', schedule_info=schedule_info)
+        schedule_info = Generate_schedule_table(courses_info).generate()
+
+        print('!!!', schedule_info)
+
+        return render_template('schedule.html', schedule_info=schedule_info, cur_user=username)
     else:
-        return '<html><body><h1>hello world</h1></body></html>'
+        return '<html><body><h1>请先登录</h1></body></html>'
+
 
 class LoginForm(Form):
     username = StringField(label='输入用户名：', validators=[DataRequired()])

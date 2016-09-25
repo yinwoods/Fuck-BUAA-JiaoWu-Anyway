@@ -34,7 +34,7 @@ tab
 }
 
 body {
-  background: #e74c3c;
+  background: #4c75a3;
   padding: 20px;
 }
 
@@ -52,12 +52,17 @@ h1.yinwoodsH1{
   text-align: center;
   font-weight: 300;
   cursor: pointer;
+  color: whitesmoke;
+}
+
+span {
+  margin-top: 5%;
   color: white;
 }
 
 table {
   font-family: 'Open Sans', Helvetica;
-  margin-top: 5%;
+  margin-top: 2%;
   margin-left: 15%;
   margin-right: 15%;
   color: #efefef;

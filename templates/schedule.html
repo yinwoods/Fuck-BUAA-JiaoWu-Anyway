@@ -14,6 +14,8 @@
 <div class='tab'>
   <center>
 
+  <span>当前用户： {{ cur_user }}</span>
+
   <table border='0' cellpadding='0' cellspacing='0'>
     <tr class='days'>
         <th></th>
@@ -30,24 +32,24 @@
         <th>第11节</th>
         <th>第12节</th>
     </tr>
-        {% set index = 1 %}
         {% for weekday in schedule_info %}
             <tr>
                 <td class='time'>{{ weekday['weekday'] }}</td>
 
                 {% for course in weekday['courses'] %}
 
-                    {% set cls = ['cs335 blue', 'cs426 purple', 'md352 green', 'cs240 orange', 'md303 navy', 'md313 red'] %}
-                    {% set index = (index + 1) % 6 %}
+                    {% set cls = ['blue', 'purple', 'green', 'orange', 'navy', 'red', 'orange'] | random %}
 
                     {% if course['name'] == '' %}
                         <td colspan="{{ (course['ed_pd'] | int) - (course['st_pd'] | int) + 1 }}"></td>
                     {% else %}
 
-                        <td class="{{ cls[index] }}" colspan="{{ (course['ed_pd'] | int) - (course['st_pd'] | int) + 1 }}">
+                        <td class="{{ cls }}" colspan="{{ (course['ed_pd'] | int) - (course['st_pd'] | int) + 1 }}">
                             {{ course['name'] }}
-                            <br/>
-                            {{ course['place'] }} - {{ course['st_ed_weekds'] }}
+                            <br>
+                            {{ course['st_ed_weeks'] }}
+                            <br>
+                            {{ course['place'] }}
                         </td>
                     {% endif %}
 

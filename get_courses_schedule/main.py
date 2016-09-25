@@ -10,13 +10,16 @@ import pymysql
 import requests
 from bs4 import BeautifulSoup
 
-from get_courses_schedule import config, course_info_filter
+from get_courses_schedule import course_info_filter
 
 
 class Crawler():
 
 
-    def __init__(self):
+    def __init__(self, username, password):
+
+        self.username = username
+        self.password = password
 
         # 数据库连接
         self.conn = pymysql.connect(host='localhost', user='root', password='root', db='fuck_buaa', charset='utf8')
@@ -65,7 +68,26 @@ class Crawler():
 
         # 返回验证码
         with open('verify.txt', 'r') as f:
-            return f.read()
+            verifyCode = f.read()
+
+        # 对验证码进行简单的去错处理
+        verifyCode = verifyCode.strip()
+        punctuation = string.punctuation + '‘’'
+        for cha in punctuation:
+            verifyCode = verifyCode.replace(cha, '')
+        verifyCode = verifyCode.strip()
+
+        # 验证码始终是四位数，因此过滤掉不符合条件的结果
+        # 使用正则表达式来提取4位数字
+        # 当验证码识别错误时，刷新页面，尝试识别新的验证码
+        try:
+            if len(self.filter_verify_code(verifyCode)) == 4:
+                print('验证码 =', verifyCode)
+                return verifyCode
+        except TypeError:
+            return self.get_verify_code()
+
+
 
     # 过滤验证码， 提高识别率
     def filter_verify_code(self, verifyCode):
@@ -113,41 +135,27 @@ class Crawler():
         loginUrl = 'http://gsmis.graduate.buaa.edu.cn/gsmis/indexAction.do'
         imageUrl = baseUrl + '/gsmis/Image.do'
 
-
         while True:
             # 获取验证码
             verifyCode = self.get_verify_code()
 
-            verifyCode = verifyCode.strip()
-            punctuation = string.punctuation + '‘’'
-            for cha in punctuation:
-                verifyCode = verifyCode.replace(cha, '')
-            verifyCode = verifyCode.strip()
-
-            # 验证码始终是四位数，因此过滤掉不符合条件的结果
-            # 使用正则表达式来提取4位数字
-            try:
-                if len(self.filter_verify_code(verifyCode)) == 4:
-                    print('验证码 =', verifyCode)
-                    break
-            except TypeError:
-                self.login()
+            data = {
+                "id" : self.username,
+                "password" : self.password,
+                "checkcode" : verifyCode
+            }
 
 
-        data = {
-            "id" : config.username,
-            "password" : config.password,
-            "checkcode" : verifyCode
-        }
-
-        self.session.cookies.update(self.cookies)
-        response = self.session.post(url=loginUrl, data=data, headers=self.headers)
-        if response.text.find('您的位置') != -1:
-            print('登录成功')
-            return
-        else:
-            print('验证码错误，尝试再次登入')
-            self.login()
+            self.session.cookies.update(self.cookies)
+            response = self.session.post(url=loginUrl, data=data, headers=self.headers)
+            if response.text.find('您的位置') != -1:
+                print('登录成功')
+                return 'SUCCESS'
+            elif response.text.find('没有该用户或者密码错误!') != -1:
+                print('没有该用户或者密码错误!')
+                return 'FAILED'
+            else:
+                print('验证码错误，尝试再次登入')
 
     # 获取已选课程信息
     def get_selected_courses(self):
@@ -274,7 +282,10 @@ class Crawler():
 #TODO: 把verify.jpg 以及 verify.txt保存到tmp目录中
 
 def main():
-    crawler =Crawler()
+    username = input('username = ')
+    password = input('password = ')
+
+    crawler =Crawler(username, password)
     crawler.login()
     print(crawler.get_courses_schedule())
 
