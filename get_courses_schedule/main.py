@@ -86,7 +86,7 @@ class Crawler():
         # 当验证码识别错误时，刷新页面，尝试识别新的验证码
         try:
             if len(self.filter_verify_code(verifyCode)) == 4:
-                print('验证码 =', verifyCode)
+                print('verifyCode =', verifyCode)
                 return verifyCode
         except TypeError:
             return self.get_verify_code()
@@ -153,13 +153,11 @@ class Crawler():
             self.session.cookies.update(self.cookies)
             response = self.session.post(url=loginUrl, data=data, headers=self.headers)
             if response.text.find('您的位置') != -1:
-                print('登录成功')
                 return 'SUCCESS'
             elif response.text.find('没有该用户或者密码错误!') != -1:
-                print('没有该用户或者密码错误!')
                 return 'FAILED'
             else:
-                print('验证码错误，尝试再次登入')
+                print('generate verifyCode wrong, try again!')
 
     # 获取已选课程信息
     def get_selected_courses(self):
@@ -235,7 +233,7 @@ class Crawler():
             re.compile(r'(--\d+班)').search(course_name).groups()
         except AttributeError:
             course_name = re.sub('--.*?$', '', course_name)
-            
+
         course_name = course_name.replace('--', '-')
 
         query = 'SELECT course_name, course_time, course_place from all_courses_info where course_name = %s'

@@ -39,10 +39,10 @@ class Courses:
 
     def __repr__(self):
         print('-' * 100, end='\n|\t')
-        print('原信息：', self.info, end='\n|\t')
-        print('课程名称:', self.course_name, end='\n|\t')
-        print('上课时间:', self.course_time, end='\n|\t')
-        print('上课地点:', self.course_place, end='\n')
+        print('primitive infomation：', self.info, end='\n|\t')
+        print('course name:', self.course_name, end='\n|\t')
+        print('course place:', self.course_time, end='\n|\t')
+        print('course time:', self.course_place, end='\n')
         print('-' * 100)
         return ''
 

@@ -1,4 +1,4 @@
-# -*- encoding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 from get_courses_schedule.main import Crawler
 from generate_schedule_table import Generate_schedule_table
