@@ -37,8 +37,6 @@ def login():
 
         schedule_info = Generate_schedule_table(courses_info).generate()
 
-        print('!!!', schedule_info)
-
         return render_template('schedule.html', schedule_info=schedule_info, cur_user=username)
     else:
         return '<html><body><h1>请先登录</h1></body></html>'

@@ -47,6 +47,8 @@
                         <td class="{{ cls }}" colspan="{{ (course['ed_pd'] | int) - (course['st_pd'] | int) + 1 }}">
                             {{ course['name'] }}
                             <br>
+                            {{ course['st_ed_pds'] }}
+                            <br>
                             {{ course['st_ed_weeks'] }}
                             <br>
                             {{ course['place'] }}
