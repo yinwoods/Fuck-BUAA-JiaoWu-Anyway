@@ -60,6 +60,16 @@ class Generate_schedule_table:
 
         return res
 
+    # 判断两节课时间上是否冲突
+    def is_conflict(self, cur_course, pre_course):
+        if cur_course['weekday'] == pre_course['weekday']:
+
+            # 两种冲突，这节课与上节课同时开始，这节课与在上节课结束之前结束
+            if (int(cur_course['st_pd']) == int(pre_course['st_pd'])) or \
+                            int(cur_course['ed_pd']) < int(pre_course['ed_pd']):
+                return True
+        return False
+
     # 处理时间上冲突的课程
     def deal_conflict_courses(self, beautify_schedule_info):
 
@@ -73,26 +83,16 @@ class Generate_schedule_table:
         res_schedule_info = []
         res_schedule_info.append(beautify_schedule_info[0])
 
-        # 时间冲突分为三种：
-        # 1、A先开始，但B开始在A结束之前
-        # 2、A先开始，但B结束在A结束之前
-        # 3、A、B同时开始，但B先结束
-
         for index, cur_course in enumerate(beautify_schedule_info[1:], start=1):
 
             pre_course = beautify_schedule_info[index - 1]
 
             # 当前这节课与上一节课时间上有冲突
-            if cur_course['weekday'] == pre_course['weekday']:
-
-                # 两种冲突，这节课与上节课同时开始，这节课与在上节课结束之前结束
-                if (int(cur_course['st_pd']) == int(pre_course['st_pd'])) or \
-                        int(cur_course['ed_pd']) < int(pre_course['ed_pd']):
-
-                    res_schedule_info[-1]['name'] += (' / ' + cur_course['name'])
-                    res_schedule_info[-1]['st_ed_weeks'] += (' / ' + cur_course['st_ed_weeks'])
-                    res_schedule_info[-1]['st_ed_pds'] += (' / ' + cur_course['st_ed_pds'])
-                    res_schedule_info[-1]['ed_pd'] = max(res_schedule_info[-1]['ed_pd'], cur_course['ed_pd'])
+            if self.is_conflict(cur_course, pre_course):
+                res_schedule_info[-1]['name'] += (' / ' + cur_course['name'])
+                res_schedule_info[-1]['st_ed_weeks'] += (' / ' + cur_course['st_ed_weeks'])
+                res_schedule_info[-1]['st_ed_pds'] += (' / ' + cur_course['st_ed_pds'])
+                res_schedule_info[-1]['ed_pd'] = max(res_schedule_info[-1]['ed_pd'], cur_course['ed_pd'])
             else:
                 res_schedule_info.append(cur_course)
         return res_schedule_info
@@ -108,11 +108,12 @@ class Generate_schedule_table:
             weekday = re.compile(r'周(\d)').search(course.course_time).group(1)
             st_ed_weeks = re.compile(r'\d+周-\d+周').search(course.course_time).group()
             (start_period, end_period) = re.compile(r'(\d+)节-(\d+)节').search(course.course_time).groups()
+            st_ed_pds = start_period + '节-' + end_period + '节'
 
             # 利用zip封装 keys values
             keys = ('name', 'weekday', 'st_pd', 'ed_pd', 'place', 'st_ed_weeks', 'st_ed_pds')
             values = (course.course_name, weekday, start_period, end_period,
-                      course.course_place, st_ed_weeks, start_period + '节-' + end_period + '节')
+                      course.course_place, st_ed_weeks, st_ed_pds)
 
             beautify_schedule_info.append(dict(zip(keys, values)))
 
@@ -152,7 +153,7 @@ class Generate_schedule_table:
         return str(self.schedule_info)
 
 def main():
-    param_str = [('中国特色社会主义理论与实践研究-9班', '周5 3周-11周 3节-8节', '主M101'), ('yinwoods-9班', '周5 3周-11周 5节-8节', '主M101'), ('矩阵理论B-2班', '周2 2周-14周 3节-4节', '主M102'), ('矩阵理论B-2班', '周4 2周-14周 3节-4节', '主M102'), ('矩阵理论B-2班 重复', '周4 2周-14周 3节-4节', '主M102'), ('人文专题课：中国绘画艺术欣赏', '周1 9周-14周 5节-8节', '主M102'), ('算法设计与分析', '周2 1周-17周 10节-12节', '主M401'), ('新型计算机网络', '周5 1周-17周 9节-11节', '主M101'), ('程序设计语言原理', '周1 1周-17周 9节-11节', '主M101')]
+    param_str = [('中国特色社会主义理论与实践研究-5班', '周3  3周-11周  5节-8节', '主M101'), ('英语一外（硕）-27班', '周3  2周-17周  3节-4节', '主北407（外语）'), ('英语一外（硕）-27班', '周4  2周-17周  3节-4节', '(三)213'), ('数理统计A-2班', '周2  2周-14周  7节-8节', '主M102'), ('数理统计A-2班', '周5  2周-14周  3节-4节', '主M102'), ('人文专题课：中国绘画艺术欣赏', '周1  9周-14周  5节-8节', '主M102'), ('算法设计与分析', '周2  1周-17周  9节-11节', '主M401'), ('高等软件工程', '周4  1周-17周  9节-11节', 'A209'), ('机器学习', '周4  1周-16周  7节-8节', 'B202'), ('机器学习', '周5  2周-18周  3节-4节', 'B102'), ('大数据处理前沿技术', '周4  1周-17周  5节-6节', 'B202'), ('学术论文写作', '周5  15周-18周  5节-8节', 'A1028 (8系)')]
     cls = Generate_schedule_table(param_str)
     res = cls.generate()
     for item in res:
