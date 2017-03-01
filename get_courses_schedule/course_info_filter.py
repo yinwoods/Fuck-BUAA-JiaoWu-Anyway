@@ -1,5 +1,6 @@
 import re
 
+
 class Courses:
 
     def __init__(self, info):
@@ -45,6 +46,7 @@ class Courses:
         print('course time:', self.course_place, end='\n')
         print('-' * 100)
         return ''
+
 
 def main():
     cls = Courses('[《应用密码学》5周-16周7节-8节 主M404 ')

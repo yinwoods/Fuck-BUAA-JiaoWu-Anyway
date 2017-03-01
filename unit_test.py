@@ -12,9 +12,8 @@ class Test(unittest.TestCase):
         with open('verify.txt', 'r') as f:
             verifyCode = f.read()
 
-
         print(self.cw.filter_verify_code(verifyCode))
-        #self.assertEqual(True, True)
+        # self.assertEqual(True, True)
 
     def tearDown(self):
         pass

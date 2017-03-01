@@ -1,10 +1,10 @@
 #!/usr/bin/python
 # -*- encoding: UTF-8 -*-
-import os
 import re
 import string
 import subprocess
-from collections import namedtuple, defaultdict, OrderedDict
+from collections import namedtuple
+from collections import OrderedDict
 
 import pymysql
 import requests
@@ -15,14 +15,18 @@ from get_courses_schedule import course_info_filter
 
 class Crawler():
 
-
     def __init__(self, username, password):
 
         self.username = username
         self.password = password
 
         # 数据库连接
-        self.conn = pymysql.connect(host='localhost', user='root', password='root', db='fuck_buaa', charset='utf8')
+        self.conn = pymysql.connect(
+                host='localhost',
+                user='root',
+                password='root',
+                db='fuck_buaa',
+                charset='utf8')
         self.cursor = self.conn.cursor()
 
         # 使用代理
@@ -36,12 +40,15 @@ class Crawler():
         self.session.proxies.update(proxies)
 
         self.headers = {
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept": ("text/html,application/xhtml+xml,a"
+                       "pplication/xml;q=0.9,image/webp,*/*;q=0.8"),
             "Accept-Encoding": "gzip, deflate, sdch",
             "Accept-Language": "zh-CN,zh;q=0.8",
             "Connection": "keep-alive",
             "Host": "gsmis.graduate.buaa.edu.cn",
-            "User-Agent": "Mozilla/5.0(X11;Linuxx86_64) AppleWebKit/537.36(KHTML, like Gecko) Ubuntu Chromium/51.0.2704.79 Chrome/51.0.2704.79 Safari/537.36"
+            "User-Agent": ("Mozilla/5.0(X11;Linuxx86_64) AppleWebKit/537.36"
+                           "(KHTML, like Gecko) Ubuntu Chromium/51.0.2704.79"
+                           "Chrome/51.0.2704.79 Safari/537.36")
         }
 
     def __del__(self):
@@ -63,7 +70,9 @@ class Crawler():
         self.cookies = res.cookies
 
         # 使用tesseract来识别验证码, 并保存到verify.txt中
-        p = subprocess.Popen(['tesseract', 'verify.jpg', 'verify'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(
+                ['tesseract', 'verify.jpg', 'verify'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         p.wait()
 
         try:
@@ -90,8 +99,6 @@ class Crawler():
                 return verifyCode
         except TypeError:
             return self.get_verify_code()
-
-
 
     # 过滤验证码， 提高识别率
     def filter_verify_code(self, verifyCode):
@@ -137,21 +144,20 @@ class Crawler():
 
         baseUrl = 'http://gsmis.graduate.buaa.edu.cn'
         loginUrl = 'http://gsmis.graduate.buaa.edu.cn/gsmis/indexAction.do'
-        imageUrl = baseUrl + '/gsmis/Image.do'
 
         while True:
             # 获取验证码
             verifyCode = self.get_verify_code()
 
             data = {
-                "id" : self.username,
-                "password" : self.password,
-                "checkcode" : verifyCode
+                "id": self.username,
+                "password": self.password,
+                "checkcode": verifyCode
             }
 
-
             self.session.cookies.update(self.cookies)
-            response = self.session.post(url=loginUrl, data=data, headers=self.headers)
+            response = self.session.post(url=loginUrl, data=data,
+                                         headers=self.headers)
             if response.text.find('您的位置') != -1:
                 return 'SUCCESS'
             elif response.text.find('没有该用户或者密码错误!') != -1:
@@ -162,7 +168,8 @@ class Crawler():
     # 获取已选课程信息
     def get_selected_courses(self):
         # 这个辣鸡教务系统登录后一定要访问任意一个二级目录，否则登录信息丢失
-        pre_url = 'http://gsmis.graduate.buaa.edu.cn/gsmis/toModule.do?prefix=/py&page=/pySelectCourses.do?do=xsXuanKe'
+        pre_url = ('http://gsmis.graduate.buaa.edu.cn/gsmis/toModule.do'
+                   '?prefix=/py&page=/pySelectCourses.do?do=xsXuanKe')
         response = self.session.get(pre_url, headers=self.headers)
 
         url = 'http://gsmis.graduate.buaa.edu.cn/gsmis/py/pyYiXuanKeCheng.do'
@@ -170,7 +177,10 @@ class Crawler():
 
         # 获取个人的课表信息
 
-        CourseInfo = namedtuple("CourseInfo", "course_id course_name course_category course_period course_cred")
+        CourseInfo = namedtuple(
+                "CourseInfo",
+                "course_id course_name course_category "
+                "course_period course_cred")
 
         html = BeautifulSoup(response.text, 'html.parser')
         trlist = html.find_all(class_="tablefont2")
@@ -181,7 +191,7 @@ class Crawler():
         # 这里的 filter 用来滤掉非选课表中的行
         for tr in filter(lambda x: len(x.find_all('td')) == 13, trlist):
             tdlist = tr.find_all('td')
-            #TODO KeyError 还未处理
+            # TODO KeyError 还未处理
             # 这里的 map 是为了对每个列调用get_text().strip()
             # 利用 namedtuple 的 _make() 函数来保存相应内容
             courseinfo = CourseInfo._make(
@@ -205,10 +215,11 @@ class Crawler():
         printTable = html.find(id='printTable')
 
         # mon, tue, wed, thu, fri, sat, sun
-        Week_schedule = namedtuple('Week_schedule', 'mon tue wed thu fri sat sun')
+        Week_schedule = namedtuple('Week_schedule',
+                                   'mon tue wed thu fri sat sun')
         week_schedule = Week_schedule._make(
-            map(lambda x: str(x.select('td')[1:]), (printTable.select('tr')[1].select('td > table > tr')[1:])))
-
+            map(lambda x: str(x.select('td')[1:]), (
+                printTable.select('tr')[1].select('td > table > tr')[1:])))
 
         for index, day in enumerate(week_schedule):
             day = re.sub(r'</(.*?)>', '', day)
@@ -218,8 +229,19 @@ class Crawler():
                 cls = course_info_filter.Courses(item)
 
                 try:
-                    query = 'INSERT INTO all_courses_info(course_name, course_time, course_place) VALUES (%s, %s, %s)'
-                    self.cursor.execute(query, (cls.course_name, '周' + str(index + 1) + '  ' + cls.course_time, cls.course_place, ))
+                    query = '''
+                        INSERT INTO
+                            all_courses_info (
+                                course_name,
+                                course_time,
+                                course_place
+                            )
+                        VALUES
+                            (%s, %s, %s)
+                    '''
+                    self.cursor.execute(query, (
+                        cls.course_name, '周' + str(index + 1) + '  '
+                        + cls.course_time, cls.course_place))
                     self.conn.commit()
                 except Exception as exc:
                     print(exc)
@@ -236,7 +258,16 @@ class Crawler():
 
         course_name = course_name.replace('--', '-')
 
-        query = 'SELECT course_name, course_time, course_place from all_courses_info where course_name = %s'
+        query = '''
+            SELECT
+                course_name,
+                course_time,
+                course_place
+            FROM
+                all_courses_info
+            WHERE
+                course_name = %s
+            '''
         self.cursor.execute(query, (course_name, ))
         self.conn.commit()
 
@@ -266,14 +297,14 @@ class Crawler():
                     res_courses_info.append(item)
         return res_courses_info
 
-#TODO: 把verify.jpg 以及 verify.txt保存到tmp目录中
+# TODO: 把verify.jpg 以及 verify.txt保存到tmp目录中
+
 
 def main():
     username = input('username = ')
     password = input('password = ')
 
-
-    crawler =Crawler(username, password)
+    crawler = Crawler(username, password)
     crawler.login()
     print(crawler.get_courses_schedule())
 
