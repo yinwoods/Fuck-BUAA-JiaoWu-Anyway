@@ -5,7 +5,7 @@
 
 - python 包有： pymysql flask requests bs4
 
-- 软件有： mysql, tesseract-ocr，其中tesseract-ocr安装教程[http://miphol.com/muse/2013/05/install-tesseract-ocr-on-ubunt.html]
+- 软件有： mysql, tesseract-ocr，其中tesseract-ocr(安装教程)[http://miphol.com/muse/2013/05/install-tesseract-ocr-on-ubunt.html]
 
 运行 get_courses_schedule 目录下的 database.sql 创建数据库以及数据表
 
