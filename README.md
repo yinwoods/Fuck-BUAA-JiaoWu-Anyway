@@ -1,10 +1,6 @@
 # Fuck-BUAA-JiaoWu-Anyway
 基于北航辣鸡教务系统定制的各种脚本
 
-### 演示：
-
-演示地址： [http://buaa.yinwoods.com](http://buaa.yinwoods.com)
-
 #### 要解决的依赖：
 
 - python 包有： pymysql flask requests bs4
@@ -29,13 +25,3 @@
 - 解决账号/密码错误识别，给出相应提示
 
 - 解决同一时间段内多门课程显示错误的问题
-
-### TODO：
-
-- 生成excel版课程表
-
-- 查看奖助信息
-
-- 填写教评信息
-
-暂时想到的功能就这么多。
